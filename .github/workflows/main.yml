@@ -8,12 +8,12 @@ on:
 
 env:
   PNPM_VERSION: 8.5.1
-  PYTHON_VERSION: 3.10.15
+  PYTHON_VERSION: 3.10.13
   NODE_VERSION: 18
-  AZURE_RESOURCE_GROUP_NAME: "azure-ml-gui"
+  AZURE_RESOURCE_GROUP_NAME: "azure-ml-antoine-mol"
   AZURE_LOCATION: "northeurope"
-  AZURE_ML_WORKSPACE_NAME: "cats-dogs-gui"
-  AZURE_WEBAPP_NAME: "cats-dogs-gui"
+  AZURE_ML_WORKSPACE_NAME: "cats-dogs-antoine-mol"
+  AZURE_WEBAPP_NAME: "cats-dogs-antoine-mol"
   DELETE_WEBAPP: "false"
   DOCKER_API_IMAGE_NAME: "mlopspython-api"
   DOCKER_REPOSITORY: ${{ github.repository_owner }}
@@ -28,7 +28,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v3
     - uses: dorny/paths-filter@v2
       id: filter_python
       with:
@@ -59,7 +59,7 @@ jobs:
   packages_unit_tests:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v3
     - name: Set up Python ${{ env.PYTHON_VERSION }}
       uses: actions/setup-python@v3
       with:
@@ -69,13 +69,13 @@ jobs:
         python -m pip install --upgrade pip
         pip install --user poetry
     - name: Run unit tests Packages Extraction
-      working-directory: packages/mlopspython-extraction
+      working-directory: packages/extraction
       run: |
         poetry install
         poetry run coverage run -m unittest tests.extraction_tests
         poetry run coverage report
     - name: Run unit tests Packages Inference
-      working-directory: packages/mlopspython-inference
+      working-directory: packages/inference
       run: |
         poetry install
         #poetry run coverage run -m unittest tests.inference_tests
@@ -83,7 +83,7 @@ jobs:
   train_unit_tests:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v3
     - name: Set up Python ${{ env.PYTHON_VERSION }}
       uses: actions/setup-python@v3
       with:
@@ -107,7 +107,7 @@ jobs:
       working-directory: train/label_split_data
       run: |
         poetry lock
-        poetry install 
+        poetry install
         poetry run coverage run -m unittest tests.label_split_data_test
         poetry run coverage report
     #- name: Run unit tests Train
@@ -127,7 +127,7 @@ jobs:
     outputs:
       new_version: ${{ steps.tag.outputs.new_version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
       - name: Bump version and push tag
         id: tag_version
         if: github.ref == 'refs/heads/main'
@@ -156,7 +156,7 @@ jobs:
       AZURE_LOCATION: ${{ env.AZURE_LOCATION }}
       DOCKER_REGISTRY: ${{ env.DOCKER_REGISTRY }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
     - name: Set up Python ${{ env.PYTHON_VERSION }}
@@ -191,7 +191,7 @@ jobs:
       id: train
       run: |
           MODEL_VERSION=$(python bin/retrieve_output.py ./train/train_output.txt model_version)
-          echo "MODEL_VERSION=$MODEL_VERSION" >> $GITHUB_OUTPUT          
+          echo "MODEL_VERSION=$MODEL_VERSION" >> $GITHUB_OUTPUT
           INTEGRATION_DATASET_VERSION=$(python bin/retrieve_output.py ./train/train_output.txt integration_dataset_version)
           echo "INTEGRATION_DATASET_VERSION=$INTEGRATION_DATASET_VERSION" >> $GITHUB_OUTPUT
           EXPERIMENT_ID=$(python bin/retrieve_output.py ./train/train_output.txt experiment_id)
@@ -212,7 +212,7 @@ jobs:
           find ./ -name '*.json' -exec cp "{}" ./  \;
           rm -r ./cats-dogs-others
     - name: Upload Model Build Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v2
       with:
         name: Publish model
         path: ./model
@@ -282,7 +282,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [deploy, train]
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v3
     - name: Set up Python ${{ env.PYTHON_VERSION }}
       uses: actions/setup-python@v3
       with:
@@ -307,7 +307,7 @@ jobs:
             --experiment_id ${{ needs.train.outputs.EXPERIMENT_ID }} \
             --integration_dataset_name "cats-dogs-others-integration" \
             --integration_dataset_version ${{ needs.train.outputs.INTEGRATION_DATASET_VERSION }} \
-            --url "http://${{ env.AZURE_WEBAPP_NAME }}.${{ env.AZURE_LOCATION }}.azurecontainer.io:5000/upload" > integration_output.txt 
+            --url "http://${{ env.AZURE_WEBAPP_NAME }}.${{ env.AZURE_LOCATION }}.azurecontainer.io:5000/upload" > integration_output.txt
         cat integration_output.txt
     - name: Delete Environment
       run: |
@@ -320,7 +320,7 @@ jobs:
     outputs:
       DOCKER_WEBAPP_IMAGE_NAME: ${{ env.DOCKER_REPOSITORY }}/${{ env.DOCKER_WEBAPP_IMAGE_NAME }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v3
     - uses: dorny/paths-filter@v2
       id: filter_webapp
       with:
@@ -337,7 +337,7 @@ jobs:
          npm run coverage
          npm run build
     - name: Upload WebApp Build Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v2
       with:
         name: Publish webapp
         path: ./production/webapp/build
@@ -360,7 +360,7 @@ jobs:
     needs: [ integration_tests ]
     environment: MLOpsPython
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
         with:
           token: ${{ secrets.GIT_TOKEN }}
           fetch-depth: 0
