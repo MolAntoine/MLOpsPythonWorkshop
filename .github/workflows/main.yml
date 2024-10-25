@@ -10,10 +10,10 @@ env:
   PNPM_VERSION: 8.5.1
   PYTHON_VERSION: 3.10.15
   NODE_VERSION: 18
-  AZURE_RESOURCE_GROUP_NAME: "azure-ml-gui"
+  AZURE_RESOURCE_GROUP_NAME: "azure-ml-antoine"
   AZURE_LOCATION: "northeurope"
-  AZURE_ML_WORKSPACE_NAME: "cats-dogs-gui"
-  AZURE_WEBAPP_NAME: "cats-dogs-gui"
+  AZURE_ML_WORKSPACE_NAME: "cats-dogs-antoine"
+  AZURE_WEBAPP_NAME: "cats-dogs-antoine"
   DELETE_WEBAPP: "false"
   DOCKER_API_IMAGE_NAME: "mlopspython-api"
   DOCKER_REPOSITORY: ${{ github.repository_owner }}
@@ -107,7 +107,7 @@ jobs:
       working-directory: train/label_split_data
       run: |
         poetry lock
-        poetry install 
+        poetry install
         poetry run coverage run -m unittest tests.label_split_data_test
         poetry run coverage report
     #- name: Run unit tests Train
@@ -197,7 +197,7 @@ jobs:
       id: train
       run: |
           MODEL_VERSION=$(python bin/retrieve_output.py ./train/train_output.txt model_version)
-          echo "MODEL_VERSION=$MODEL_VERSION" >> $GITHUB_OUTPUT          
+          echo "MODEL_VERSION=$MODEL_VERSION" >> $GITHUB_OUTPUT
           INTEGRATION_DATASET_VERSION=$(python bin/retrieve_output.py ./train/train_output.txt integration_dataset_version)
           echo "INTEGRATION_DATASET_VERSION=$INTEGRATION_DATASET_VERSION" >> $GITHUB_OUTPUT
           EXPERIMENT_ID=$(python bin/retrieve_output.py ./train/train_output.txt experiment_id)
@@ -315,7 +315,7 @@ jobs:
             --experiment_id ${{ needs.train.outputs.EXPERIMENT_ID }} \
             --integration_dataset_name "cats-dogs-others-integration" \
             --integration_dataset_version ${{ needs.train.outputs.INTEGRATION_DATASET_VERSION }} \
-            --url "http://${{ env.AZURE_WEBAPP_NAME }}.${{ env.AZURE_LOCATION }}.azurecontainer.io:5000/upload" > integration_output.txt 
+            --url "http://${{ env.AZURE_WEBAPP_NAME }}.${{ env.AZURE_LOCATION }}.azurecontainer.io:5000/upload" > integration_output.txt
         cat integration_output.txt
     - name: Delete Environment
       run: |
